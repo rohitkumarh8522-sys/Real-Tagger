@@ -5,10 +5,12 @@ from flask import Flask
 import telebot
 from telebot import types
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN environment variable set nahi hai! Render Environment me BOT_TOKEN dalein.")
+
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Render Web Service को जीवित रखने के लिए हल्का Flask सर्वर
 app = Flask(__name__)
 
 @app.route("/")
@@ -117,6 +119,18 @@ def run_tagging(chat_id, custom_text, reply_to_message_id):
         bot.send_message(chat_id, "✅ सभी उपलब्ध यूज़र्स को टैग कर दिया गया है।")
     except Exception:
         pass
+
+@bot.message_handler(commands=["start"])
+def handle_start(message):
+    bot.reply_to(
+        message,
+        "👋 नमस्ते! मैं **UserTagger Bot** हूँ।\n\n"
+        "मुझे अपने ग्रुप में जोड़ें और **Admin** बनाएं:\n"
+        "• `/panel` — बटन कंट्रोल पैनल खोलें\n"
+        "• `/tag आपका मैसेज` — बैच में यूज़र्स टैग करें\n"
+        "• `/stop` — टैगिंग रोकें",
+        parse_mode="Markdown"
+    )
 
 @bot.message_handler(content_types=["new_chat_members", "text", "photo", "video", "document", "sticker"])
 def collect_users(message):
@@ -244,4 +258,4 @@ def handle_callbacks(call):
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     print("Bot aur Flask server chal rahe hain...")
-    bot.infinity_polling(skip_pending=True)
+    bot.infinity_polling(skip_pending=True, timeout=30, long_polling_timeout=25)
