@@ -166,7 +166,7 @@ def format_duration(minutes):
         return f"{minutes // 60}h"
     return f"{minutes // 1440}d"
 
-# --- कीबोर्ड्स ---
+# --- कीबोर्ड्स (बटन पर कोई इमोजी नहीं) ---
 
 def start_keyboard():
     kb = types.InlineKeyboardMarkup(row_width=2)
@@ -194,7 +194,7 @@ def start_keyboard():
 def group_settings_text(gid_str):
     gdata = db["groups"].get(gid_str)
     if not gdata:
-        return "Group not found."
+        return "✦ Group not found."
     cfg = gdata["cfg"]
     mode_txt = {
         "mute": f"Mute ({format_duration(cfg['mute_minutes'])})",
@@ -204,14 +204,14 @@ def group_settings_text(gid_str):
 
     return (
         "⚙️ <b>BOT SETTINGS</b>\n"
-        "━━━━━━━━━━━━━━\n"
-        f"<b>Group:</b> {gdata.get('title')}\n"
-        f"<b>ID:</b> <code>{gid_str}</code>\n"
-        "━━━━━━━━━━━━━━\n"
-        f"Bio Guard: <b>{'ON' if cfg['bio_guard'] else 'OFF'}</b>\n"
-        f"Link/Bot Guard: <b>{'ON' if cfg['link_guard'] else 'OFF'}</b>\n"
-        f"Forward Guard: <b>{'ON' if cfg['forward_guard'] else 'OFF'}</b>\n"
-        f"Punishment: <b>{mode_txt}</b> ({cfg['warn_limit']} warns)"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"✦ <b>Group:</b> {gdata.get('title')}\n"
+        f"✦ <b>ID:</b> <code>{gid_str}</code>\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"• Bio Guard: <b>{'ON' if cfg['bio_guard'] else 'OFF'}</b>\n"
+        f"• Link & Bot Guard: <b>{'ON' if cfg['link_guard'] else 'OFF'}</b>\n"
+        f"• Forward Guard: <b>{'ON' if cfg['forward_guard'] else 'OFF'}</b>\n"
+        f"• Punishment: <b>{mode_txt}</b> ({cfg['warn_limit']} warns)"
     )
 
 def group_settings_keyboard(gid_str):
@@ -249,18 +249,18 @@ def group_settings_keyboard(gid_str):
         )
     )
     kb.add(types.InlineKeyboardButton("Reset Warnings", callback_data=f"reset_warns:{gid_str}"))
-    kb.add(types.InlineKeyboardButton("⬅️ Back", callback_data="my_groups"))
+    kb.add(types.InlineKeyboardButton("Back", callback_data="my_groups"))
     return kb
 
 def owner_panel_text():
     return (
         "👑 <b>OWNER PANEL</b>\n"
-        "━━━━━━━━━━━━━━\n"
-        f"Groups / Channels: <b>{len(db['groups'])}</b>\n"
-        f"Users: <b>{len(db['users'])}</b>\n"
-        f"Updates: <code>{db.get('updates_url')}</code>\n"
-        f"Support: <code>{db.get('support_url')}</code>\n"
-        "━━━━━━━━━━━━━━"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"✦ Groups & Channels: <b>{len(db['groups'])}</b>\n"
+        f"✦ Users: <b>{len(db['users'])}</b>\n"
+        f"✦ Updates: <code>{db.get('updates_url')}</code>\n"
+        f"✦ Support: <code>{db.get('support_url')}</code>\n"
+        "━━━━━━━━━━━━━━━━━━━━"
     )
 
 def owner_panel_keyboard():
@@ -271,12 +271,12 @@ def owner_panel_keyboard():
         types.InlineKeyboardButton("Support Link", callback_data="own_set_support")
     )
     kb.add(types.InlineKeyboardButton("Managed Groups", callback_data="my_groups"))
-    kb.add(types.InlineKeyboardButton("⬅️ Back", callback_data="home"))
+    kb.add(types.InlineKeyboardButton("Back", callback_data="home"))
     return kb
 
 def owner_cancel_keyboard():
     kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton("⬅️ Back", callback_data="own_back"))
+    kb.add(types.InlineKeyboardButton("Back", callback_data="own_back"))
     return kb
 
 # --- प्रोटेक्शन व सजा लॉजिक ---
@@ -304,12 +304,13 @@ def punish_user(chat_id, user, reason_label, offending_msg_id=None):
             try:
                 bot.ban_chat_member(chat_id, user.id)
                 msg = (
-                    f"🔨 <b>User Banned</b>\n"
-                    f"User: {mention}\n"
-                    f"Reason: {reason_label}"
+                    "🔨 <b>ACTION TAKEN • BAN</b>\n"
+                    "━━━━━━━━━━━━━━━━━━━━\n"
+                    f"✦ <b>User:</b> {mention}\n"
+                    f"✦ <b>Reason:</b> {reason_label}"
                 )
             except Exception:
-                msg = f"⚠️ Ban failed for {mention} ({reason_label})"
+                msg = f"⚡ <b>BAN FAILED</b> • {mention} ({reason_label})"
         elif mode == "mute":
             mute_mins = cfg["mute_minutes"]
             until_ts = int(time.time()) + (mute_mins * 60)
@@ -322,25 +323,28 @@ def punish_user(chat_id, user, reason_label, offending_msg_id=None):
                 )
                 bot.restrict_chat_member(chat_id, user.id, until_date=until_ts, permissions=perms)
                 msg = (
-                    f"🔇 <b>User Muted ({format_duration(mute_mins)})</b>\n"
-                    f"User: {mention}\n"
-                    f"Reason: {reason_label}"
+                    f"🔇 <b>ACTION TAKEN • MUTE ({format_duration(mute_mins)})</b>\n"
+                    "━━━━━━━━━━━━━━━━━━━━\n"
+                    f"✦ <b>User:</b> {mention}\n"
+                    f"✦ <b>Reason:</b> {reason_label}"
                 )
             except Exception:
-                msg = f"⚠️ Mute failed for {mention} ({reason_label})"
+                msg = f"⚡ <b>MUTE FAILED</b> • {mention} ({reason_label})"
         else:
             msg = (
-                f"⚠️ <b>Max Warnings ({limit}/{limit})</b>\n"
-                f"User: {mention}\n"
-                f"Reason: {reason_label}"
+                f"🚨 <b>MAX WARNINGS ({limit}/{limit})</b>\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"✦ <b>User:</b> {mention}\n"
+                f"✦ <b>Reason:</b> {reason_label}"
             )
         send_clean_alert(chat_id, msg)
     else:
         save_db(db)
         msg = (
-            f"⚠️ <b>Warning ({warns}/{limit})</b>\n"
-            f"User: {mention}\n"
-            f"Reason: {reason_label}"
+            f"⚠️ <b>WARNING ({warns}/{limit})</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"✦ <b>User:</b> {mention}\n"
+            f"✦ <b>Reason:</b> {reason_label}"
         )
         send_clean_alert(chat_id, msg)
 
@@ -382,13 +386,15 @@ def cmd_start(message):
 
         first_name = (message.from_user.first_name or "User").replace("<", "").replace(">", "")
         text = (
-            f"Hello, <b>{first_name}</b>\n"
-            "I keep your group clean from spam links, bot URLs, and forwarded messages.\n\n"
-            "<b>What I protect:</b>\n"
-            "• Links & bot URLs in member bio\n"
-            "• Links & @bot usernames in chat\n"
-            "• Forwarded messages in group\n"
-            "• Custom warnings, mute & ban"
+            f"✨ <b>Hello, {first_name}</b>\n"
+            "🛡️ <b>Group Protector & Bio Guard</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "✦ Detects links & bot URLs in member bio\n"
+            "✦ Blocks links & <code>@bot</code> usernames in chat\n"
+            "✦ Restricts forwarded messages in group\n"
+            "✦ Custom warning limit, mute & ban controls\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "⚡ Add me to your group and keep it clean."
         )
         bot.send_message(message.chat.id, text, parse_mode="HTML", reply_markup=start_keyboard())
     else:
@@ -399,7 +405,7 @@ def cmd_admin(message):
     if message.chat.type != "private":
         return
     if not is_owner(message.from_user.id):
-        bot.reply_to(message, "Owner only.")
+        bot.reply_to(message, "🔒 Owner only.")
         return
     owner_pending.pop(message.from_user.id, None)
     bot.send_message(message.chat.id, owner_panel_text(), parse_mode="HTML", reply_markup=owner_panel_keyboard())
@@ -419,8 +425,10 @@ def handle_callbacks(call):
         owner_pending.pop(uid, None)
         first_name = (call.from_user.first_name or "User").replace("<", "").replace(">", "")
         text = (
-            f"Hello, <b>{first_name}</b>\n"
-            "I keep your group clean from spam links, bot URLs, and forwarded messages."
+            f"✨ <b>Hello, {first_name}</b>\n"
+            "🛡️ <b>Group Protector & Bio Guard</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "⚡ Add me to your group and keep it clean."
         )
         try:
             bot.edit_message_text(text, call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=start_keyboard())
@@ -445,10 +453,10 @@ def handle_callbacks(call):
         else:
             for gid_str, gdata in allowed:
                 kb.add(types.InlineKeyboardButton(f"{gdata.get('title', gid_str)}", callback_data=f"open_grp:{gid_str}"))
-        kb.add(types.InlineKeyboardButton("⬅️ Back", callback_data="home"))
+        kb.add(types.InlineKeyboardButton("Back", callback_data="home"))
 
         try:
-            bot.edit_message_text("<b>Select a Group to Manage:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=kb)
+            bot.edit_message_text("📂 <b>Select a Group to Manage:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=kb)
         except Exception:
             pass
         return
@@ -532,13 +540,13 @@ def handle_callbacks(call):
 
         if data == "own_set_updates":
             owner_pending[uid] = {"mode": "set_updates"}
-            bot.edit_message_text("Send new Updates link:", call.message.chat.id, call.message.message_id, reply_markup=owner_cancel_keyboard())
+            bot.edit_message_text("📣 <b>Send new Updates link:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=owner_cancel_keyboard())
         elif data == "own_set_support":
             owner_pending[uid] = {"mode": "set_support"}
-            bot.edit_message_text("Send new Support link:", call.message.chat.id, call.message.message_id, reply_markup=owner_cancel_keyboard())
+            bot.edit_message_text("💬 <b>Send new Support link:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=owner_cancel_keyboard())
         elif data == "own_promo":
             owner_pending[uid] = {"mode": "promo"}
-            bot.edit_message_text("Send message to broadcast:", call.message.chat.id, call.message.message_id, reply_markup=owner_cancel_keyboard())
+            bot.edit_message_text("🚀 <b>Send message to broadcast:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML", reply_markup=owner_cancel_keyboard())
         bot.answer_callback_query(call.id)
 
 # --- मैसेज हैंडलर ---
@@ -557,12 +565,12 @@ def handle_all_messages(message):
             if mode == "set_updates" and message.text:
                 db["updates_url"] = message.text.strip()
                 save_db(db)
-                bot.send_message(user.id, "Updates link updated.", reply_markup=owner_panel_keyboard())
+                bot.send_message(user.id, "✅ Updates link updated.", reply_markup=owner_panel_keyboard())
 
             elif mode == "set_support" and message.text:
                 db["support_url"] = message.text.strip()
                 save_db(db)
-                bot.send_message(user.id, "Support link updated.", reply_markup=owner_panel_keyboard())
+                bot.send_message(user.id, "✅ Support link updated.", reply_markup=owner_panel_keyboard())
 
             elif mode == "promo":
                 sent = 0
@@ -574,7 +582,7 @@ def handle_all_messages(message):
                         time.sleep(0.15)
                     except Exception:
                         pass
-                bot.send_message(user.id, f"Sent to {sent} chats.", reply_markup=owner_panel_keyboard())
+                bot.send_message(user.id, f"🚀 Sent to {sent} chats.", reply_markup=owner_panel_keyboard())
         return
 
     if message.chat.type in ["group", "supergroup"]:
